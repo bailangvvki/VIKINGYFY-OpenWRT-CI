@@ -121,3 +121,5 @@ CONFIG_ATH11K_MEM_PROFILE_512M=y
 CONFIG_PACKAGE_openssh-sftp-server=y
 #CONFIG_PACKAGE_kmod-tcp-bbr=y
 #CONFIG_DEFAULT_tcp_bbr=y
+
+CONFIG_PACKAGE_luci-app-dockerman=y
