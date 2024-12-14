@@ -11,7 +11,7 @@ https://github.com/VIKINGYFY/immortalwrt.git
 
 ## 京东云亚瑟 AX1800 Pro DAED 需要更换分区表和uboot,具体使用方法详见恩山帖子: https://www.right.com.cn/forum/thread-8402269-1-1.html
 
-# 12Muboot
+# 12M kernel分区uboot
 
 ## https://github.com/bailangvvki/uboot-ipq60xx-build
 
