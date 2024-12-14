@@ -67,11 +67,11 @@ echo "CONFIG_PACKAGE_jq=y" >> ./.config
 # 简单明了的系统资源占用查看工具
 echo "CONFIG_PACKAGE_btop=y" >> ./.config
 # 多网盘存储
-# echo "CONFIG_PACKAGE_luci-app-alist=y" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-alist=y" >> ./.config
 # 强大的工具(需要添加源或git clone)
 # echo "CONFIG_PACKAGE_luci-app-lucky=y" >> ./.config
 # 网络通信工具
 echo "CONFIG_PACKAGE_curl=y" >> ./.config
 # BBR 拥塞控制算法(终端侧)
-echo "CONFIG_PACKAGE_kmod-tcp-bbr=y" >> ./.config
-echo "CONFIG_DEFAULT_tcp_bbr=y" >> ./.config
+# echo "CONFIG_PACKAGE_kmod-tcp-bbr=y" >> ./.config
+# echo "CONFIG_DEFAULT_tcp_bbr=y" >> ./.config
