@@ -57,3 +57,65 @@ if [[ $WRT_TARGET != *"X86"* ]]; then
 	echo "CONFIG_TARGET_OPTIONS=y" >> ./.config
 	echo "CONFIG_TARGET_OPTIMIZATION=\"-O2 -pipe -march=armv8-a+crypto+crc -mcpu=cortex-a53+crypto+crc -mtune=cortex-a53\"" >> ./.config
 fi
+
+#修改jdc re-ss-01 (亚瑟) 的内核大小为12M
+sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" target/linux/qualcommax/image/ipq60xx.mk
+
+#修改jdc re-cs-02 (雅典娜) 的内核大小为12M
+sed -i "/^define Device\/jdcloud_re-cs-02/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" target/linux/qualcommax/image/ipq60xx.mk
+
+#修改jdc re-cs-07 (太乙) 的内核大小为12M
+sed -i "/^define Device\/jdcloud_re-cs-07/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" target/linux/qualcommax/image/ipq60xx.mk
+
+
+
+# 想要剔除的
+# echo "CONFIG_PACKAGE_htop=n" >> ./.config
+# echo "CONFIG_PACKAGE_iperf3=n" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-wolplus=n" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-tailscale=n" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-advancedplus=n" >> ./.config
+echo "CONFIG_PACKAGE_luci-theme-kucat=n" >> ./.config
+# 一定要禁止编译这个coremark 不然会导致编译失败
+echo "CONFIG_PACKAGE_coremark=n" >> ./.config
+
+# 可以让FinalShell查看文件列表并且ssh连上不会自动断开
+echo "CONFIG_PACKAGE_openssh-sftp-server=y" >> ./.config
+# 解析、查询、操作和格式化 JSON 数据
+echo "CONFIG_PACKAGE_jq=y" >> ./.config
+# 简单明了的系统资源占用查看工具
+echo "CONFIG_PACKAGE_btop=y" >> ./.config
+# 多网盘存储
+echo "CONFIG_PACKAGE_luci-app-alist=y" >> ./.config
+# 强大的工具Lucky大吉(需要添加源或git clone)
+echo "CONFIG_PACKAGE_luci-app-lucky=y" >> ./.config
+# 网络通信工具
+echo "CONFIG_PACKAGE_curl=y" >> ./.config
+# BBR 拥塞控制算法(终端侧)
+# echo "CONFIG_PACKAGE_kmod-tcp-bbr=y" >> ./.config
+# echo "CONFIG_DEFAULT_tcp_bbr=y" >> ./.config
+# 磁盘管理
+echo "CONFIG_PACKAGE_luci-app-diskman=y" >> ./.config
+# 其他调整
+# 大鹅
+echo "CONFIG_PACKAGE_luci-app-daed=y" >> ./.config
+# 大鹅-next
+# echo "CONFIG_PACKAGE_luci-app-daed-next=y" >> ./.config
+＃ 连上ssh不会断开并且显示文件管理
+echo "CONFIG_PACKAGE_openssh-sftp-server"=y
+# docker只能集成
+echo "CONFIG_PACKAGE_luci-app-dockerman=y" >> ./.config
+
+# qBittorrent
+echo "CONFIG_PACKAGE_luci-app-qbittorrent=y" >> ./.config
+# 添加Homebox内网测速
+# echo "CONFIG_PACKAGE_luci-app-homebox=y" >> ./.config
+# V2rayA
+echo "CONFIG_PACKAGE_luci-app-v2raya=y" >> ./.config
+# NSS的sqm
+echo "CONFIG_PACKAGE_luci-app-sqm=y" >> ./.config
+echo "CONFIG_PACKAGE_sqm-scripts-nss=y" >> ./.config
+# istore 编译报错
+# echo "CONFIG_PACKAGE_luci-app-istorex=y" >> ./.config
+# QuickStart
+# echo "CONFIG_PACKAGE_luci-app-quickstart=y" >> ./.config
