@@ -58,6 +58,17 @@ if [[ $WRT_TARGET != *"X86"* ]]; then
 	echo "CONFIG_TARGET_OPTIMIZATION=\"-O3 -pipe -march=armv8-a+crypto+crc -mcpu=cortex-a53+crypto+crc -mtune=cortex-a53\"" >> ./.config
 fi
 
+# eBPF
+echo "CONFIG_DEVEL=y" >> ./.config
+echo "CONFIG_BPF_TOOLCHAIN_HOST=y" >> ./.config
+echo "# CONFIG_BPF_TOOLCHAIN_NONE is not set" >> ./.config
+echo "CONFIG_KERNEL_BPF_EVENTS=y" >> ./.config
+echo "CONFIG_KERNEL_CGROUP_BPF=y" >> ./.config
+echo "CONFIG_KERNEL_DEBUG_INFO=y" >> ./.config
+echo "CONFIG_KERNEL_DEBUG_INFO_BTF=y" >> ./.config
+echo "# CONFIG_KERNEL_DEBUG_INFO_REDUCED is not set" >> ./.config
+echo "CONFIG_KERNEL_XDP_SOCKETS=y" >> ./.config
+
 #修改jdc re-ss-01 (亚瑟) 的内核大小为12M
 sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" target/linux/qualcommax/image/ipq60xx.mk
 
@@ -66,8 +77,6 @@ sed -i "/^define Device\/jdcloud_re-cs-02/,/^endef/ { /KERNEL_SIZE := 6144k/s//K
 
 #修改jdc re-cs-07 (太乙) 的内核大小为12M
 sed -i "/^define Device\/jdcloud_re-cs-07/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" target/linux/qualcommax/image/ipq60xx.mk
-
-
 
 # 想要剔除的
 # echo "CONFIG_PACKAGE_htop=n" >> ./.config
