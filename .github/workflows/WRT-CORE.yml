@@ -54,6 +54,7 @@ env:
   WRT_BRANCH: ${{inputs.WRT_BRANCH}}
   WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
   WRT_TEST: ${{inputs.WRT_TEST}}
+  WRT_PROJECT_DIR: ${{GITHUB_WORKSPACE}}
 
 jobs:
   core:
@@ -135,7 +136,10 @@ jobs:
         run: |
           git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
 
-          cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
+          echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
+
+          # cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
+          cd $OPENWRT_PATH && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
       - name: Check Scripts(检查代码)
         run: |
@@ -179,21 +183,24 @@ jobs:
 
       - name: Update Feeds(更新依赖源)
         run: |
-          cd ./wrt/
+          # cd ./wrt/
+          cd $OPENWRT_PATH
 
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
       - name: Custom Packages(自定义替换软件包)
         run: |
-          cd ./wrt/package/
+          # cd ./wrt/package/
+          cd $OPENWRT_PATH
 
           $GITHUB_WORKSPACE/Scripts/Packages.sh
           $GITHUB_WORKSPACE/Scripts/Handles.sh
 
       - name: Custom Settings(自定义设置)
         run: |
-          cd ./wrt/
+          # cd ./wrt/
+          cd $OPENWRT_PATH
 
           cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL.txt >> .config
 
@@ -204,20 +211,23 @@ jobs:
       - name: Download Packages(下载依赖)
         if: env.WRT_TEST != 'true'
         run: |
-          cd ./wrt/
+          # cd ./wrt/
+          cd $OPENWRT_PATH
 
           make download -j$(nproc)
 
       - name: Compile Firmware(编译固件)
         if: env.WRT_TEST != 'true'
         run: |
-          cd ./wrt/
+          # cd ./wrt/
+          cd $OPENWRT_PATH
 
           make -j$(nproc) || make -j1 V=s
 
       - name: Machine Information(设备信息)
         run: |
-          cd ./wrt/
+          # cd ./wrt/
+          cd $OPENWRT_PATH
 
           echo "======================="
           lscpu | grep -E "name|Core|Thread"
@@ -229,7 +239,8 @@ jobs:
 
       - name: Package Firmware(打包固件)
         run: |
-          cd ./wrt/ && mkdir ./upload/
+          # cd ./wrt/ && mkdir ./upload/
+          cd $OPENWRT_PATH && mkdir ./upload/
 
           cp -f ./.config ./upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
 
