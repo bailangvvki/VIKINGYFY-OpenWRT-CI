@@ -56,7 +56,9 @@ fi
 if [[ $WRT_TARGET != *"X86"* ]]; then
 	echo "CONFIG_TARGET_OPTIONS=y" >> ./.config
 	# echo "CONFIG_TARGET_OPTIMIZATION=\"-O3 -pipe -march=armv8-a+crypto+crc -mcpu=cortex-a53+crypto+crc -mtune=cortex-a53\"" >> ./.config
-     	echo "CONFIG_TARGET_OPTIMIZATION=\"-Ofast -pipe -march=armv8-a+crypto+crc -mcpu=cortex-a53+crypto+crc -mtune=cortex-a53 -ffast-math -flto -funroll-loops -ftree-vectorize -fomit-frame-pointer -funswitch-loops -finline-functions\"" >> ./.config
+     	# echo "CONFIG_TARGET_OPTIMIZATION=\"-Ofast -pipe -march=armv8-a+crypto+crc -mcpu=cortex-a53+crypto+crc -mtune=cortex-a53 -ffast-math -flto -funroll-loops -ftree-vectorize -fomit-frame-pointer -funswitch-loops -finline-functions\"" >> ./.config
+      	# echo "CONFIG_TARGET_OPTIMIZATION=\"-Ofast -pipe -march=armv8-a+crypto+crc+fp-armv8 -mcpu=cortex-a53+crypto+crc -mtune=cortex-a53 -ffast-math -flto=full -funroll-loops -ftree-vectorize -fomit-frame-pointer -funswitch-loops -finline-functions -fgcse-after-reload -fipa-sra -fprefetch-loop-arrays -floop-parallelize-all -flink-time-optimization -frename-registers -funroll-all-loops -fstrict-aliasing -fwhole-program -mfpu=neon-fp-armv8 -mfloat-abi=hard\"" >> ./.config
+       echo "CONFIG_TARGET_OPTIMIZATION=\"-Ofast -pipe -march=armv8-a+crypto+crc+fp-armv8+simd+neon -mcpu=cortex-a53+crypto+crc+neon -mtune=cortex-a53 -ffast-math -flto=full -funroll-loops -ftree-vectorize -fomit-frame-pointer -funswitch-loops -finline-functions -fgcse-after-reload -fipa-sra -fprefetch-loop-arrays -floop-parallelize-all -flink-time-optimization -frename-registers -funroll-all-loops -fstrict-aliasing -fwhole-program -mfpu=neon-fp-armv8 -mfloat-abi=hard -fsched2-use-superblocks -fgraphite-identity -ftree-loop-im -floop-nest-optimize -ftree-builtin-call-dce -floop-block -fprofile-use -fprofile-generate -funroll-loops -fomit-frame-pointer -fschedule-insns -fstack-protector-strong -foptimize-sibling-calls -fno-tree-vrp -fno-tree-scev-cprop -fno-fat-lto-objects -falign-functions=32 -falign-loops=32 -falign-jumps=32 -falign-labels=32\"" >> ./.config
 fi
 
 # eBPF
