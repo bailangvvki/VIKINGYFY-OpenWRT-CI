@@ -60,13 +60,6 @@ jobs:
     name: ${{inputs.WRT_SOURCE}}
     runs-on: ubuntu-22.04
     steps:
-      - name: Combine Disks(合并磁盘)
-        uses: easimon/maximize-build-space@master
-        with:
-          swap-size-mb: 1024
-          temp-reserve-mb: 100
-          root-reserve-mb: 1024
-    
       - name: Checkout Projects(结算项目)
         uses: actions/checkout@main
 
@@ -118,6 +111,13 @@ jobs:
           sudo apt-get install -yqq clang-15
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
+
+      - name: Combine Disks(合并磁盘)
+        uses: easimon/maximize-build-space@master
+        with:
+          swap-size-mb: 1024
+          temp-reserve-mb: 100
+          root-reserve-mb: 1024
 
       - name: Initialization Values(初始化变量)
         run: |
