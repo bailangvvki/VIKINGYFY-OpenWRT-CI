@@ -54,7 +54,6 @@ env:
   WRT_BRANCH: ${{inputs.WRT_BRANCH}}
   WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
   WRT_TEST: ${{inputs.WRT_TEST}}
-  WRT_PROJECT_DIR: ${{GITHUB_WORKSPACE}}
 
 jobs:
   core:
@@ -82,27 +81,6 @@ jobs:
             /usr/local/share/vcpkg/ports/llvm* /usr/local/share/vcpkg/ports/mysql* /usr/local/share/vcpkg/ports/snap* \
             /usr/share/azure* /usr/share/dotnet* /usr/share/glade* /usr/share/miniconda* /usr/share/php* /usr/share/swift \
             /var/lib/mysql* /var/log/azure*"
-
-      - name: Check Server Performance(检查服务器性能)
-        run: |
-          echo "警告⚠"
-          echo "分配的服务器性能有限，若选择的插件过多，务必注意CPU性能！"
-          echo -e "已知CPU型号（降序）：7763，8370C，8272CL，8171M，E5-2673 \n"
-          echo "--------------------------CPU信息--------------------------"
-          echo "CPU物理数量：$(cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l)"
-          echo -e "CPU核心信息：$(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
-          echo "--------------------------内存信息--------------------------"
-          echo "已安装内存详细信息："
-          echo -e "$(sudo lshw -short -C memory | grep GiB) \n"
-          echo "--------------------------硬盘信息--------------------------"
-          echo "硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l)" && df -hT
-
-      - name: Combine Disks(合并磁盘)
-        uses: easimon/maximize-build-space@master
-        with:
-          swap-size-mb: 1024
-          temp-reserve-mb: 100
-          root-reserve-mb: 1024
 
       - name: Initialization Environment(初始化环境)
         env:
@@ -136,10 +114,7 @@ jobs:
         run: |
           git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
 
-          echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
-
-          # cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
-          cd $OPENWRT_PATH && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
+          cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
       - name: Check Scripts(检查代码)
         run: |
@@ -183,24 +158,21 @@ jobs:
 
       - name: Update Feeds(更新依赖源)
         run: |
-          # cd ./wrt/
-          cd $OPENWRT_PATH
+          cd ./wrt/
 
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
       - name: Custom Packages(自定义替换软件包)
         run: |
-          # cd ./wrt/package/
-          cd $OPENWRT_PATH
+          cd ./wrt/package/
 
           $GITHUB_WORKSPACE/Scripts/Packages.sh
           $GITHUB_WORKSPACE/Scripts/Handles.sh
 
       - name: Custom Settings(自定义设置)
         run: |
-          # cd ./wrt/
-          cd $OPENWRT_PATH
+          cd ./wrt/
 
           cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL.txt >> .config
 
@@ -211,23 +183,20 @@ jobs:
       - name: Download Packages(下载依赖)
         if: env.WRT_TEST != 'true'
         run: |
-          # cd ./wrt/
-          cd $OPENWRT_PATH
+          cd ./wrt/
 
           make download -j$(nproc)
 
       - name: Compile Firmware(编译固件)
         if: env.WRT_TEST != 'true'
         run: |
-          # cd ./wrt/
-          cd $OPENWRT_PATH
+          cd ./wrt/
 
           make -j$(nproc) || make -j1 V=s
 
       - name: Machine Information(设备信息)
         run: |
-          # cd ./wrt/
-          cd $OPENWRT_PATH
+          cd ./wrt/
 
           echo "======================="
           lscpu | grep -E "name|Core|Thread"
@@ -239,8 +208,7 @@ jobs:
 
       - name: Package Firmware(打包固件)
         run: |
-          # cd ./wrt/ && mkdir ./upload/
-          cd $OPENWRT_PATH && mkdir ./upload/
+          cd ./wrt/ && mkdir ./upload/
 
           cp -f ./.config ./upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
 
