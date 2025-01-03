@@ -192,10 +192,10 @@ jobs:
         run: |
           cd ./wrt/
 
-          # make -j$(nproc) || make -j1 V=s
+          make -j$(nproc) || make -j1 V=s
 
           # 只保留必要的错误信息
-          make -j$(nproc) -s
+          # make -j$(nproc) -s
 
           # 完全禁止所有的输出
           # make -j$(nproc) > /dev/null 2>&1
