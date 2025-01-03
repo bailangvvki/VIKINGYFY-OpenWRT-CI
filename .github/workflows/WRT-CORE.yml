@@ -63,6 +63,13 @@ jobs:
       - name: Checkout Projects(结算项目)
         uses: actions/checkout@main
 
+      - name: Combine Disks(合并磁盘)
+        uses: easimon/maximize-build-space@master
+        with:
+          swap-size-mb: 1024
+          temp-reserve-mb: 100
+          root-reserve-mb: 1024
+
       - name: Free Disk Space(清理磁盘空间)
         uses: endersonmenezes/free-disk-space@main
         with:
@@ -81,13 +88,6 @@ jobs:
             /usr/local/share/vcpkg/ports/llvm* /usr/local/share/vcpkg/ports/mysql* /usr/local/share/vcpkg/ports/snap* \
             /usr/share/azure* /usr/share/dotnet* /usr/share/glade* /usr/share/miniconda* /usr/share/php* /usr/share/swift \
             /var/lib/mysql* /var/log/azure*"
-
-      - name: Combine Disks(合并磁盘)
-        uses: easimon/maximize-build-space@master
-        with:
-          swap-size-mb: 1024
-          temp-reserve-mb: 100
-          root-reserve-mb: 1024
 
       - name: Check Server Performance(检查服务器性能)
         run: |
