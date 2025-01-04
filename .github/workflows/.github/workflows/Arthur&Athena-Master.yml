@@ -1,10 +1,15 @@
+#CI项目
 name: Arthur&Athena-Master
 
+#CI计划
 on:
   workflow_dispatch:
   workflow_call:
   # schedule:
   #   - cron: 0 20 * * *
+
+#CI权限
+permissions: write-all
 
 env:
   REPO_URL: https://github.com/VIKINGYFY/immortalwrt.git
@@ -18,6 +23,7 @@ env:
   FIRMWARE_TAG: Arthur&Athena-Master
   TZ: Asia/Shanghai
 
+#CI任务
 jobs:
   Build:
     runs-on: ubuntu-22.04
