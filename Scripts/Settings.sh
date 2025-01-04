@@ -115,7 +115,6 @@ echo "CONFIG_PACKAGE_luci-app-daed=y" >> ./.config
 echo "CONFIG_PACKAGE_openssh-sftp-server"=y
 # docker只能集成
 echo "CONFIG_PACKAGE_luci-app-dockerman=y" >> ./.config
-
 # qBittorrent
 echo "CONFIG_PACKAGE_luci-app-qbittorrent=y" >> ./.config
 # 添加Homebox内网测速
@@ -129,3 +128,5 @@ echo "CONFIG_PACKAGE_sqm-scripts-nss=y" >> ./.config
 # echo "CONFIG_PACKAGE_luci-app-istorex=y" >> ./.config
 # QuickStart
 # echo "CONFIG_PACKAGE_luci-app-quickstart=y" >> ./.config
+# filebrowser-go
+echo "CONFIG_PACKAGE_luci-app-filebrowser-go=y" >> ./.config
