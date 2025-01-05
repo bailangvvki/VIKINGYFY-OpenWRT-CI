@@ -1,4 +1,3 @@
-
 --- a/src/GNUmakefile
 +++ b/src/GNUmakefile
 @@ -72,6 +72,10 @@ VERBOSE ?= NO
