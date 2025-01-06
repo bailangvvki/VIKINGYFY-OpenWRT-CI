@@ -197,8 +197,8 @@ jobs:
         run: |
           cd ./wrt/
 
-          # make -j$(nproc) || make -j1 V=s
-          make -j1
+          make -j$(nproc) || make -j1 V=s
+          # make -j1
 
           # 只保留必要的错误信息
           # make -j$(nproc) -s
