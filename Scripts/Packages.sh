@@ -88,12 +88,12 @@ git clone https://github.com/sirpdboy/luci-app-lucky.git package/lucky
 #删除官方的默认插件
 # rm -rf ../feeds/luci/applications/luci-app-{passwall*,mosdns,dockerman,dae*,bypass*}
 # rm -rf ../feeds/packages/net/{shadowsocks-rust,shadowsocksr-libev,xray*,v2ray*,dae*,sing-box,geoview}
-rm -rf ../feeds/luci/applications/luci-app-{dae*}
-rm -rf ../feeds/packages/net/{dae*}
+# rm -rf ../feeds/luci/applications/luci-app-{dae*}
+# rm -rf ../feeds/packages/net/{dae*}
 
-# QiuSimons luci-app-daed
-git clone https://github.com/QiuSimons/luci-app-daed package/dae
-mkdir -p Package/libcron && wget -O Package/libcron/Makefile https://raw.githubusercontent.com/immortalwrt/packages/refs/heads/master/libs/libcron/Makefile
+# # QiuSimons luci-app-daed
+# git clone https://github.com/QiuSimons/luci-app-daed package/dae
+# mkdir -p Package/libcron && wget -O Package/libcron/Makefile https://raw.githubusercontent.com/immortalwrt/packages/refs/heads/master/libs/libcron/Makefile
 
 #coremark修复
 sed -i 's/mkdir \$(PKG_BUILD_DIR)\/\$(ARCH)/mkdir -p \$(PKG_BUILD_DIR)\/\$(ARCH)/g' ../feeds/packages/utils/coremark/Makefile
