@@ -133,6 +133,8 @@ jobs:
 
       - name: Clone Code(拉取源码)
         run: |
+          df -hT $GITHUB_WORKSPACE
+        
           git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO
 
           cd immortalwrt
