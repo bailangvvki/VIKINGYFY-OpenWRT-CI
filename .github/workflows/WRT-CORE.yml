@@ -141,7 +141,8 @@ jobs:
 
           echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
 
-          echo 这是路径$OPENWRT_PATH
+          echo 这是路径
+          echo $OPENWRT_PATH
           
           cd $GITHUB_ENV && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
