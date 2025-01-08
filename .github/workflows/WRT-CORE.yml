@@ -124,7 +124,9 @@ jobs:
 
       - name: Clone Code(拉取源码)
         run: |
-          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO /wrt/
+          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO
+
+          ll
 
           cd wrt && echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
 
