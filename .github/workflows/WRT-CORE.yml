@@ -60,7 +60,6 @@ jobs:
     name: ${{inputs.WRT_SOURCE}}
     runs-on: ubuntu-22.04
     steps:
-      
       - name: Free Disk Space(清理磁盘空间)
         uses: endersonmenezes/free-disk-space@main
         with:
