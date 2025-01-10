@@ -270,16 +270,18 @@ jobs:
 
       - name: Package Firmware(打包固件)
         run: |
-          tree
           # cd ./wrt/ && mkdir ./upload/
-          cd $OPENWRT_PATH/ && mkdir ./upload/
+          cd $OPENWRT_PATH/ && mkdir $OPENWRT_PATH/upload
+
+          tree
 
           # cp -f ./.config ./upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
-          cp -f ./.config ./upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
+          cp -f $OPENWRT_PATH/.config $OPENWRT_PATH/upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
 
           if [[ $WRT_TEST != 'true' ]]; then
             KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)
 
+            # 清理无用内容
             find ./bin/targets/ -iregex ".*\(buildinfo\|json\|manifest\|sha256sums\|packages\)$" -exec rm -rf {} +
 
             for TYPE in $WRT_TYPE ; do
@@ -303,7 +305,8 @@ jobs:
         with:
           tag_name: ${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_DATE}}
           # files: ./wrt/upload/*.*
-          files: ./upload/*.*
+          # files: $OPENWRT_PATH/bin/targets/qualcommax/ipq60xx/*.bin
+          files: $OPENWRT_PATH/upload/*.*
           body: |
             这是个平台固件包，内含多个设备！
             请注意选择你需要的设备固件！
