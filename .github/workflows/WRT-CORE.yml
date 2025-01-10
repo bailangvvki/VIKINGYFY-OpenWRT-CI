@@ -327,10 +327,10 @@ jobs:
 
 
       - name: Upload Bin Directory(上传固件)
-      uses: actions/upload-artifact@main
-      with:
-        name: ${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_DATE}}
-        path: ${{ env.OPENWRT_PATH }}/bin
+        uses: actions/upload-artifact@main
+        with:
+          name: ${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_DATE}}
+          path: ${{ env.OPENWRT_PATH }}/bin
 
     - name: Organize Files(整理文件)
       if: steps.compile.outputs.status == 'success'
