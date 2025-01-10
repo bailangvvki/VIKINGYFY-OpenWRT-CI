@@ -332,49 +332,49 @@ jobs:
           name: ${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_DATE}}
           path: ${{ env.OPENWRT_PATH }}/bin
 
-    - name: Organize Files(整理文件)
-      if: steps.compile.outputs.status == 'success'
-      run: |
-        cd $OPENWRT_PATH/bin/targets/*/*
-        cat sha256sums
-        cp $OPENWRT_PATH/.config build.config
-        mv -f $OPENWRT_PATH/bin/packages/*/*/*.apk packages
-        tar -zcf Packages.tar.gz packages
-        rm -rf packages feeds.buildinfo version.buildinfo
-        echo "FIRMWARE_PATH=$PWD" >> $GITHUB_ENV
+      - name: Organize Files(整理文件)
+        if: steps.compile.outputs.status == 'success'
+        run: |
+          cd $OPENWRT_PATH/bin/targets/*/*
+          cat sha256sums
+          cp $OPENWRT_PATH/.config build.config
+          mv -f $OPENWRT_PATH/bin/packages/*/*/*.apk packages
+          tar -zcf Packages.tar.gz packages
+          rm -rf packages feeds.buildinfo version.buildinfo
+          echo "FIRMWARE_PATH=$PWD" >> $GITHUB_ENV
 
-    - name: Upload Firmware To Artifact(将固件上传到Artifact)
-      uses: actions/upload-artifact@main
-      with:
-        # name: ${{ env.SOURCE_REPO }}-firmware-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-${{ env.FILE_DATE }}
-        name: ${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_DATE}}
-        path: ${{ env.FIRMWARE_PATH }}
+      - name: Upload Firmware To Artifact(将固件上传到Artifact)
+        uses: actions/upload-artifact@main
+        with:
+          # name: ${{ env.SOURCE_REPO }}-firmware-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}-${{ env.FILE_DATE }}
+          name: ${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_DATE}}
+          path: ${{ env.FIRMWARE_PATH }}
 
-    - name: Upload Firmware To Release(发布固件)
-      uses: ncipollo/release-action@v1
-      with:
-        # name: R${{ env.DATE }} for ${{ env.FIRMWARE_TAG }}
-        name: ${{ env.OPENWRT_PATH }}/bin/targets/qualcommax/ipq60xx/*.bin
-        allowUpdates: true
-        # tag: ${{ env.FIRMWARE_TAG }}
-        tag: ${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_DATE}}
-        token: ${{ secrets.GITHUB_TOKEN }}
-        artifacts: ${{ env.FIRMWARE_PATH }}/*
-        body: |
-              这是个平台固件包，内含多个设备！
-              请注意选择你需要的设备固件！
-              不要问，刷就完事了！
-  
-              全系带开源硬件加速，别问了！
-  
-              内核版本：${{env.WRT_KVER}}
-  
-              WIFI名称：${{env.WRT_SSID}}
-              WIFI密码：${{env.WRT_WORD}}
-  
-              源码：${{env.WRT_REPO}}
-              分支：${{env.WRT_BRANCH}}
-              平台：${{env.WRT_TARGET}}
-              设备：${{env.WRT_TYPE}}
-              地址：${{env.WRT_IP}}
-              密码：${{env.WRT_PW}}
+      - name: Upload Firmware To Release(发布固件)
+        uses: ncipollo/release-action@v1
+        with:
+          # name: R${{ env.DATE }} for ${{ env.FIRMWARE_TAG }}
+          name: ${{ env.OPENWRT_PATH }}/bin/targets/qualcommax/ipq60xx/*.bin
+          allowUpdates: true
+          # tag: ${{ env.FIRMWARE_TAG }}
+          tag: ${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_DATE}}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: ${{ env.FIRMWARE_PATH }}/*
+          body: |
+                这是个平台固件包，内含多个设备！
+                请注意选择你需要的设备固件！
+                不要问，刷就完事了！
+    
+                全系带开源硬件加速，别问了！
+    
+                内核版本：${{env.WRT_KVER}}
+    
+                WIFI名称：${{env.WRT_SSID}}
+                WIFI密码：${{env.WRT_WORD}}
+    
+                源码：${{env.WRT_REPO}}
+                分支：${{env.WRT_BRANCH}}
+                平台：${{env.WRT_TARGET}}
+                设备：${{env.WRT_TYPE}}
+                地址：${{env.WRT_IP}}
+                密码：${{env.WRT_PW}}
