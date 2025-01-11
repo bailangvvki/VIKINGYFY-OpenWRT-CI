@@ -271,7 +271,7 @@ jobs:
       - name: Package Firmware(打包固件)
         run: |
           # cd ./wrt/ && mkdir ./upload/
-          cd $OPENWRT_PATH/ && mkdir ./upload
+          cd $OPENWRT_PATH/ && mkdir $OPENWRT_PATH/upload
 
           # cp -f ./.config ./upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
           cp -f $OPENWRT_PATH/.config $OPENWRT_PATH/upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
