@@ -60,20 +60,9 @@ jobs:
     name: ${{inputs.WRT_SOURCE}}
     runs-on: ubuntu-22.04
     steps:
-      - name: Check Server Performance(检查服务器性能)
-        run: |
-          echo "警告⚠"
-          echo "分配的服务器性能有限，若选择的插件过多，务必注意CPU性能！"
-          echo -e "已知CPU型号（降序）：7763，8370C，8272CL，8171M，E5-2673 \n"
-          echo "--------------------------CPU信息--------------------------"
-          echo "CPU物理数量：$(cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l)"
-          echo -e "CPU核心信息：$(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
-          echo "--------------------------内存信息--------------------------"
-          echo "已安装内存详细信息："
-          echo -e "$(sudo lshw -short -C memory | grep GiB) \n"
-          echo "--------------------------硬盘信息--------------------------"
-          echo "硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l)" && df -hT
-  
+      - name: Checkout Projects(结算项目)
+        uses: actions/checkout@main
+
       - name: Free Disk Space(清理磁盘空间)
         uses: endersonmenezes/free-disk-space@main
         with:
@@ -92,16 +81,6 @@ jobs:
             /usr/local/share/vcpkg/ports/llvm* /usr/local/share/vcpkg/ports/mysql* /usr/local/share/vcpkg/ports/snap* \
             /usr/share/azure* /usr/share/dotnet* /usr/share/glade* /usr/share/miniconda* /usr/share/php* /usr/share/swift \
             /var/lib/mysql* /var/log/azure*"
-            
-      - name: Combine Disks(合并磁盘)
-        uses: easimon/maximize-build-space@master
-        with:
-          swap-size-mb: 1024
-          temp-reserve-mb: 100
-          root-reserve-mb: 1024
-
-      - name: Checkout Projects(结算项目)
-        uses: actions/checkout@main
 
       - name: Initialization Environment(初始化环境)
         env:
@@ -133,12 +112,9 @@ jobs:
 
       - name: Clone Code(拉取源码)
         run: |
-          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO wrt/
+          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
 
-          cd wrt && echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
-
-          # cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
-          cd $OPENWRT_PATH/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
+          cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
       - name: Check Scripts(检查代码)
         run: |
@@ -152,25 +128,19 @@ jobs:
           key: ${{env.WRT_TARGET}}-${{env.WRT_VER}}-${{env.WRT_HASH}}
           restore-keys: ${{env.WRT_TARGET}}-${{env.WRT_VER}}
           path: |
-            # ./wrt/.ccache
-            # ./wrt/staging_dir/host*
-            # ./wrt/staging_dir/tool*
-            .$OPENWRT_PATH/.ccache
-            .$OPENWRT_PATH/staging_dir/host*
-            .$OPENWRT_PATH/staging_dir/tool*
+            ./wrt/.ccache
+            ./wrt/staging_dir/host*
+            ./wrt/staging_dir/tool*
 
       - name: Update Caches(更新缓存)
         if: env.WRT_TEST != 'true'
         run: |
-          # if [ -d "./wrt/staging_dir" ]; then
-          if [ -d "$OPENWRT_PATH/staging_dir" ]; then
-            # find "./wrt/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
-            find "$OPENWRT_PATH/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
+          if [ -d "./wrt/staging_dir" ]; then
+            find "./wrt/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
               find "$DIR" -type f -exec touch {} +
             done
 
-            # mkdir -p ./wrt/tmp && echo "1" > ./wrt/tmp/.build
-            mkdir -p $OPENWRT_PATH/tmp && echo "1" > $OPENWRT_PATH/tmp/.build
+            mkdir -p ./wrt/tmp && echo "1" > ./wrt/tmp/.build
 
             echo "toolchain skiped done!"
           else
@@ -188,24 +158,21 @@ jobs:
 
       - name: Update Feeds(更新依赖源)
         run: |
-          # cd ./wrt/
-          cd $OPENWRT_PATH
+          cd ./wrt/
 
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
       - name: Custom Packages(自定义替换软件包)
         run: |
-          # cd ./wrt/package/
-          cd $OPENWRT_PATH/package/
+          cd ./wrt/package/
 
           $GITHUB_WORKSPACE/Scripts/Packages.sh
           $GITHUB_WORKSPACE/Scripts/Handles.sh
 
       - name: Custom Settings(自定义设置)
         run: |
-          # cd ./wrt/
-          cd $OPENWRT_PATH
+          cd ./wrt/
 
           cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL.txt >> .config
 
@@ -216,37 +183,20 @@ jobs:
       - name: Download Packages(下载依赖)
         if: env.WRT_TEST != 'true'
         run: |
-          # cd ./wrt/
-          cd $OPENWRT_PATH
+          cd ./wrt/
 
           make download -j$(nproc)
-
-      - name: Check Server Performance(编译前再度检查服务器性能)
-        run: |
-          echo "警告⚠"
-          echo "分配的服务器性能有限，若选择的插件过多，务必注意CPU性能！"
-          echo -e "已知CPU型号（降序）：7763，8370C，8272CL，8171M，E5-2673 \n"
-          echo "--------------------------CPU信息--------------------------"
-          echo "CPU物理数量：$(cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l)"
-          echo -e "CPU核心信息：$(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
-          echo "--------------------------内存信息--------------------------"
-          echo "已安装内存详细信息："
-          echo -e "$(sudo lshw -short -C memory | grep GiB) \n"
-          echo "--------------------------硬盘信息--------------------------"
-          echo "硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l)" && df -hT
 
       - name: Compile Firmware(编译固件)
         if: env.WRT_TEST != 'true'
         run: |
-          # cd ./wrt/
-          cd $OPENWRT_PATH
+          cd ./wrt/
 
           make -j$(nproc) || make -j1 V=s
 
-      - name: Machine Information(编译完成后再度检查设备信息)
+      - name: Machine Information(设备信息)
         run: |
-          # cd ./wrt/
-          cd $OPENWRT_PATH
+          cd ./wrt/
 
           echo "======================="
           lscpu | grep -E "name|Core|Thread"
@@ -255,51 +205,29 @@ jobs:
           echo "======================="
           du -h --max-depth=1
           echo "======================="
-  
-          echo "警告⚠"
-          echo "分配的服务器性能有限，若选择的插件过多，务必注意CPU性能！"
-          echo -e "已知CPU型号（降序）：7763，8370C，8272CL，8171M，E5-2673 \n"
-          echo "--------------------------CPU信息--------------------------"
-          echo "CPU物理数量：$(cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l)"
-          echo -e "CPU核心信息：$(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
-          echo "--------------------------内存信息--------------------------"
-          echo "已安装内存详细信息："
-          echo -e "$(sudo lshw -short -C memory | grep GiB) \n"
-          echo "--------------------------硬盘信息--------------------------"
-          echo "硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l)" && df -hT
 
       - name: Package Firmware(打包固件)
         run: |
-          # cd ./wrt/ && mkdir ./upload/
-          cd $OPENWRT_PATH/ && mkdir $OPENWRT_PATH/upload
+          cd ./wrt/ && mkdir ./upload/
 
-          # cp -f ./.config ./upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
-          cp -f $OPENWRT_PATH/.config $OPENWRT_PATH/upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
+          cp -f ./.config ./upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
 
           if [[ $WRT_TEST != 'true' ]]; then
-            # KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)
-            KVER=$(find $OPENWRT_PATH/bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)
+            KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)
 
-            # 清理无用内容
-            # find ./bin/targets/ -iregex ".*\(buildinfo\|json\|manifest\|sha256sums\|packages\)$" -exec rm -rf {} +
-            find $OPENWRT_PATH/bin/targets/ -iregex ".*\(buildinfo\|json\|manifest\|sha256sums\|packages\)$" -exec rm -rf {} +
+            find ./bin/targets/ -iregex ".*\(buildinfo\|json\|manifest\|sha256sums\|packages\)$" -exec rm -rf {} +
 
             for TYPE in $WRT_TYPE ; do
-              # for FILE in $(find ./bin/targets/ -type f -iname "*$TYPE*.*") ; do
-              for FILE in $(find $OPENWRT_PATH/bin/targets/ -type f -iname "*$TYPE*.*") ; do
+              for FILE in $(find ./bin/targets/ -type f -iname "*$TYPE*.*") ; do
                 EXT=$(basename $FILE | cut -d '.' -f 2-)
                 NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($TYPE\).*")
                 NEW_FILE="$WRT_VER"_"$NAME"_"$WRT_DATE"."$EXT"
-                # mv -f $FILE ./upload/$NEW_FILE
-                mv -f $FILE $OPENWRT_PATH/upload/$NEW_FILE
+                mv -f $FILE ./upload/$NEW_FILE
               done
             done
 
-            # find ./bin/targets/ -type f -exec mv -f {} ./upload/ \;
-            find $OPENWRT_PATH/bin/targets/ -type f -exec mv -f {} $OPENWRT_PATH/upload/ \;
+            find ./bin/targets/ -type f -exec mv -f {} ./upload/ \;
           fi
-
-          tree
 
           echo "WRT_KVER=${KVER:-none}" >> $GITHUB_ENV
 
@@ -307,9 +235,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_DATE}}
-          # files: ./wrt/upload/*.*
-          # files: ${{ env.OPENWRT_PATH }}/bin/targets/qualcommax/ipq60xx/*.bin
-          files: ${{ env.OPENWRT_PATH }}/upload/*.bin
+          files: ./wrt/upload/*.*
           body: |
             这是个平台固件包，内含多个设备！
             请注意选择你需要的设备固件！
