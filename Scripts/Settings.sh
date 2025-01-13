@@ -1,256 +1,126 @@
-#云编译公用核心
-name: WRT-CORE
-
-on:
-  workflow_call:
-    inputs:
-      WRT_TARGET:
-        required: true
-        type: string
-      WRT_THEME:
-        required: true
-        type: string
-      WRT_NAME:
-        required: true
-        type: string
-      WRT_SSID:
-        required: true
-        type: string
-      WRT_WORD:
-        required: true
-        type: string
-      WRT_IP:
-        required: true
-        type: string
-      WRT_PW:
-        required: true
-        type: string
-      WRT_REPO:
-        required: true
-        type: string
-      WRT_BRANCH:
-        required: true
-        type: string
-      WRT_SOURCE:
-        required: false
-        type: string
-      WRT_PACKAGE:
-        required: false
-        type: string
-      WRT_TEST:
-        required: false
-        type: string
-
-env:
-  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  WRT_TARGET: ${{inputs.WRT_TARGET}}
-  WRT_THEME: ${{inputs.WRT_THEME}}
-  WRT_NAME: ${{inputs.WRT_NAME}}
-  WRT_SSID: ${{inputs.WRT_SSID}}
-  WRT_WORD: ${{inputs.WRT_WORD}}
-  WRT_IP: ${{inputs.WRT_IP}}
-  WRT_PW: ${{inputs.WRT_PW}}
-  WRT_REPO: ${{inputs.WRT_REPO}}
-  WRT_BRANCH: ${{inputs.WRT_BRANCH}}
-  WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
-  WRT_TEST: ${{inputs.WRT_TEST}}
-
-jobs:
-  core:
-    name: ${{inputs.WRT_SOURCE}}
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout Projects(结算项目)
-        uses: actions/checkout@main
-
-      - name: Free Disk Space(清理磁盘空间)
-        uses: endersonmenezes/free-disk-space@main
-        with:
-          testing: false
-          remove_android: true
-          remove_dotnet: true
-          remove_haskell: true
-          remove_tool_cache: true
-          remove_swap: true
-          remove_packages: "android* azure* clang* dotnet* firefox* ghc* golang* google* libclang* libgl1* lld* llvm* \
-            microsoft* mongodb* mono* mysql* nodejs* openjdk* php* postgresql* powershell* snap* temurin* yarn* zulu*"
-          remove_packages_one_command: true
-          remove_folders: "/etc/apt/sources.list.d* /etc/mono* /etc/mysql* /usr/include/linux/android* /usr/lib/llvm* /usr/lib/mono* \
-            /usr/local/lib/android* /usr/local/lib/node_modules* /usr/local/share/chromium* /usr/local/share/powershell* \
-            /usr/local/share/vcpkg/ports/azure* /usr/local/share/vcpkg/ports/google* /usr/local/share/vcpkg/ports/libpq/android* \
-            /usr/local/share/vcpkg/ports/llvm* /usr/local/share/vcpkg/ports/mysql* /usr/local/share/vcpkg/ports/snap* \
-            /usr/share/azure* /usr/share/dotnet* /usr/share/glade* /usr/share/miniconda* /usr/share/php* /usr/share/swift \
-            /var/lib/mysql* /var/log/azure*"
-
-      - name: Initialization Environment(初始化环境)
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          docker rmi $(docker images -q)
-          sudo -E apt -yqq update
-          sudo -E apt -yqq full-upgrade
-          sudo -E apt -yqq autoremove --purge
-          sudo -E apt -yqq autoclean
-          sudo -E apt -yqq clean
-          sudo -E apt -yqq install dos2unix libfuse-dev
-          sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
-          sudo apt-get install -yqq clang-15
-          sudo -E systemctl daemon-reload
-          sudo -E timedatectl set-timezone "Asia/Shanghai"
-
-      - name: Initialization Values(初始化变量)
-        run: |
-          export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M.%S")
-          export WRT_CI=$(basename $GITHUB_WORKSPACE)
-          export WRT_VER=$(echo $WRT_REPO | cut -d '/' -f 5-)-$WRT_BRANCH
-          export WRT_TYPE=$(sed -n "1{s/^#//;s/\r$//;p;q}" $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt)
-
-          echo "WRT_DATE=$WRT_DATE" >> $GITHUB_ENV
-          echo "WRT_CI=$WRT_CI" >> $GITHUB_ENV
-          echo "WRT_VER=$WRT_VER" >> $GITHUB_ENV
-          echo "WRT_TYPE=$WRT_TYPE" >> $GITHUB_ENV
-
-      - name: Clone Code(拉取源码)
-        run: |
-          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
-
-          cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
-
-      - name: Check Scripts(检查代码)
-        run: |
-          find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
-
-      - name: Check Caches(检查缓存)
-        id: check-cache
-        if: env.WRT_TEST != 'true'
-        uses: actions/cache@main
-        with:
-          key: ${{env.WRT_TARGET}}-${{env.WRT_VER}}-${{env.WRT_HASH}}
-          restore-keys: ${{env.WRT_TARGET}}-${{env.WRT_VER}}
-          path: |
-            ./wrt/.ccache
-            ./wrt/staging_dir/host*
-            ./wrt/staging_dir/tool*
-
-      - name: Update Caches(更新缓存)
-        if: env.WRT_TEST != 'true'
-        run: |
-          if [ -d "./wrt/staging_dir" ]; then
-            find "./wrt/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
-              find "$DIR" -type f -exec touch {} +
-            done
-
-            mkdir -p ./wrt/tmp && echo "1" > ./wrt/tmp/.build
-
-            echo "toolchain skiped done!"
-          else
-            echo "caches missed!"
-          fi
-
-          if ${{steps.check-cache.outputs.cache-hit != 'true'}}; then
-            CACHE_LIST=$(gh cache list --key "$WRT_TARGET-$WRT_VER" | cut -f 1)
-            for CACHE_KEY in $CACHE_LIST; do
-               gh cache delete $CACHE_KEY
-            done
-
-            echo "caches cleanup done!"
-          fi
-
-      - name: Update Feeds(更新依赖源)
-        run: |
-          cd ./wrt/
-
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
-
-      - name: Custom Packages(自定义替换软件包)
-        run: |
-          cd ./wrt/package/
-
-          $GITHUB_WORKSPACE/Scripts/Packages.sh
-          $GITHUB_WORKSPACE/Scripts/Handles.sh
-
-      - name: Custom Settings(自定义设置)
-        run: |
-          cd ./wrt/
-
-          cat $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt $GITHUB_WORKSPACE/Config/GENERAL.txt >> .config
-
-          $GITHUB_WORKSPACE/Scripts/Settings.sh
-
-          make defconfig -j$(nproc)
-
-      - name: Download Packages(下载依赖)
-        if: env.WRT_TEST != 'true'
-        run: |
-          cd ./wrt/
-
-          make download -j$(nproc)
-
-      - name: Compile Firmware(编译固件)
-        if: env.WRT_TEST != 'true'
-        run: |
-          cd ./wrt/
-
-          make -j$(nproc) || make -j1 V=s
-
-      - name: Machine Information(设备信息)
-        run: |
-          cd ./wrt/
-
-          echo "======================="
-          lscpu | grep -E "name|Core|Thread"
-          echo "======================="
-          df -h
-          echo "======================="
-          du -h --max-depth=1
-          echo "======================="
-
-      - name: Package Firmware(打包固件)
-        run: |
-          cd ./wrt/ && mkdir ./upload/
-
-          cp -f ./.config ./upload/Config_"$WRT_TARGET"_"$WRT_VER"_"$WRT_DATE".txt
-
-          if [[ $WRT_TEST != 'true' ]]; then
-            KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)
-
-            find ./bin/targets/ -iregex ".*\(buildinfo\|json\|manifest\|sha256sums\|packages\)$" -exec rm -rf {} +
-
-            for TYPE in $WRT_TYPE ; do
-              for FILE in $(find ./bin/targets/ -type f -iname "*$TYPE*.*") ; do
-                EXT=$(basename $FILE | cut -d '.' -f 2-)
-                NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($TYPE\).*")
-                NEW_FILE="$WRT_VER"_"$NAME"_"$WRT_DATE"."$EXT"
-                mv -f $FILE ./upload/$NEW_FILE
-              done
-            done
-
-            find ./bin/targets/ -type f -exec mv -f {} ./upload/ \;
-          fi
-
-          echo "WRT_KVER=${KVER:-none}" >> $GITHUB_ENV
-
-      - name: Release Firmware(发布固件)
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{env.WRT_TARGET}}_${{env.WRT_VER}}_${{env.WRT_DATE}}
-          files: ./wrt/upload/*.*
-          body: |
-            这是个平台固件包，内含多个设备！
-            请注意选择你需要的设备固件！
-            不要问，刷就完事了！
-
-            全系带开源硬件加速，别问了！
-
-            内核版本：${{env.WRT_KVER}}
-
-            WIFI名称：${{env.WRT_SSID}}
-            WIFI密码：${{env.WRT_WORD}}
-
-            源码：${{env.WRT_REPO}}
-            分支：${{env.WRT_BRANCH}}
-            平台：${{env.WRT_TARGET}}
-            设备：${{env.WRT_TYPE}}
-            地址：${{env.WRT_IP}}
-            密码：${{env.WRT_PW}}
+#!/bin/bash
+#修改默认主题
+sed -i "s/luci-theme-bootstrap/luci-theme-$WRT_THEME/g" $(find ./feeds/luci/collections/ -type f -name "Makefile")
+#修改immortalwrt.lan关联IP
+sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $(find ./feeds/luci/modules/luci-mod-system/ -type f -name "flash.js")
+#添加编译日期标识
+sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ $WRT_CI-$WRT_DATE')/g" $(find ./feeds/luci/modules/luci-mod-status/ -type f -name "10_system.js")
+WIFI_SH="./package/base-files/files/etc/uci-defaults/990_set-wireless.sh"
+WIFI_UC="./package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc"
+if [ -f "$WIFI_SH" ]; then
+	#修改WIFI名称
+	sed -i "s/BASE_SSID='.*'/BASE_SSID='$WRT_SSID'/g" $WIFI_SH
+	#修改WIFI密码
+	sed -i "s/BASE_WORD='.*'/BASE_WORD='$WRT_WORD'/g" $WIFI_SH
+elif [ -f "$WIFI_UC" ]; then
+	#修改WIFI名称
+	sed -i "s/ssid='.*'/ssid='$WRT_SSID'/g" $WIFI_UC
+	#修改WIFI密码
+	sed -i "s/key='.*'/key='$WRT_WORD'/g" $WIFI_UC
+	#修改WIFI地区
+	sed -i "s/country='.*'/country='CN'/g" $WIFI_UC
+	#修改WIFI加密
+	sed -i "s/encryption='.*'/encryption='psk2+ccmp'/g" $WIFI_UC
+fi
+CFG_FILE="./package/base-files/files/bin/config_generate"
+#修改默认IP地址
+sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $CFG_FILE
+#修改默认主机名
+sed -i "s/hostname='.*'/hostname='$WRT_NAME'/g" $CFG_FILE
+#修复dropbear
+# sed -i "s/Interface/DirectInterface/" ./package/network/services/dropbear/files/dropbear.config
+#配置文件修改
+echo "CONFIG_PACKAGE_luci=y" >> ./.config
+echo "CONFIG_LUCI_LANG_zh_Hans=y" >> ./.config
+echo "CONFIG_PACKAGE_luci-theme-$WRT_THEME=y" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-$WRT_THEME-config=y" >> ./.config
+#手动调整的插件
+if [ -n "$WRT_PACKAGE" ]; then
+	echo "$WRT_PACKAGE" >> ./.config
+fi
+#高通平台调整
+if [[ $WRT_TARGET == *"IPQ"* ]]; then
+	#取消nss相关feed
+	echo "CONFIG_FEED_nss_packages=n" >> ./.config
+	echo "CONFIG_FEED_sqm_scripts_nss=n" >> ./.config
+	#设置NSS版本
+	echo "CONFIG_NSS_FIRMWARE_VERSION_11_4=n" >> ./.config
+	echo "CONFIG_NSS_FIRMWARE_VERSION_12_2=y" >> ./.config
+fi
+#编译器优化
+if [[ $WRT_TARGET != *"X86"* ]]; then
+	echo "CONFIG_TARGET_OPTIONS=y" >> ./.config
+	# echo "CONFIG_TARGET_OPTIMIZATION=\"-O2 -pipe -march=armv8-a+crypto+crc -mcpu=cortex-a53+crypto+crc -mtune=cortex-a53\"" >> ./.config
+ 	echo "CONFIG_TARGET_OPTIMIZATION=\"-O3 -pipe -march=armv8-a+crypto+crc -mcpu=cortex-a53+crypto+crc -mtune=cortex-a53\"" >> ./.config
+fi
+# eBPF
+echo "CONFIG_DEVEL=y" >> ./.config
+echo "CONFIG_BPF_TOOLCHAIN_HOST=y" >> ./.config
+echo "# CONFIG_BPF_TOOLCHAIN_NONE is not set" >> ./.config
+echo "CONFIG_KERNEL_BPF_EVENTS=y" >> ./.config
+echo "CONFIG_KERNEL_CGROUP_BPF=y" >> ./.config
+echo "CONFIG_KERNEL_DEBUG_INFO=y" >> ./.config
+echo "CONFIG_KERNEL_DEBUG_INFO_BTF=y" >> ./.config
+echo "# CONFIG_KERNEL_DEBUG_INFO_REDUCED is not set" >> ./.config
+echo "CONFIG_KERNEL_XDP_SOCKETS=y" >> ./.config
+#修改jdc re-ss-01 (亚瑟) 的内核大小为12M
+sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" target/linux/qualcommax/image/ipq60xx.mk
+#修改jdc re-cs-02 (雅典娜) 的内核大小为12M
+sed -i "/^define Device\/jdcloud_re-cs-02/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" target/linux/qualcommax/image/ipq60xx.mk
+#修改jdc re-cs-07 (太乙) 的内核大小为12M
+sed -i "/^define Device\/jdcloud_re-cs-07/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" target/linux/qualcommax/image/ipq60xx.mk
+# 想要剔除的
+# echo "CONFIG_PACKAGE_htop=n" >> ./.config
+echo "CONFIG_PACKAGE_iperf3=n" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-wolplus=n" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-tailscale=n" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-advancedplus=n" >> ./.config
+echo "CONFIG_PACKAGE_luci-theme-kucat=n" >> ./.config
+# 一定要禁止编译这个coremark 不然会导致编译失败
+echo "CONFIG_PACKAGE_coremark=n" >> ./.config
+# 可以让FinalShell查看文件列表并且ssh连上不会自动断开
+echo "CONFIG_PACKAGE_openssh-sftp-server=y" >> ./.config
+# 解析、查询、操作和格式化 JSON 数据
+echo "CONFIG_PACKAGE_jq=y" >> ./.config
+# 简单明了的系统资源占用查看工具
+echo "CONFIG_PACKAGE_btop=y" >> ./.config
+# 多网盘存储
+echo "CONFIG_PACKAGE_luci-app-alist=y" >> ./.config
+# 强大的工具Lucky大吉(需要添加源或git clone)
+echo "CONFIG_PACKAGE_luci-app-lucky=y" >> ./.config
+# 网络通信工具
+echo "CONFIG_PACKAGE_curl=y" >> ./.config
+# BBR 拥塞控制算法(终端侧)
+# echo "CONFIG_PACKAGE_kmod-tcp-bbr=y" >> ./.config
+# echo "CONFIG_DEFAULT_tcp_bbr=y" >> ./.config
+# 磁盘管理
+echo "CONFIG_PACKAGE_luci-app-diskman=y" >> ./.config
+# 其他调整
+# 大鹅
+echo "CONFIG_PACKAGE_luci-app-daed=y" >> ./.config
+# 大鹅-next
+# echo "CONFIG_PACKAGE_luci-app-daed-next=y" >> ./.config
+# 连上ssh不会断开并且显示文件管理
+echo "CONFIG_PACKAGE_openssh-sftp-server"=y
+# docker只能集成
+echo "CONFIG_PACKAGE_luci-app-dockerman=y" >> ./.config
+# qBittorrent
+echo "CONFIG_PACKAGE_luci-app-qbittorrent=y" >> ./.config
+# 添加Homebox内网测速
+# echo "CONFIG_PACKAGE_luci-app-homebox=y" >> ./.config
+# V2rayA
+echo "CONFIG_PACKAGE_luci-app-v2raya=y" >> ./.config
+echo "CONFIG_PACKAGE_v2ray-core=y" >> ./.config
+echo "CONFIG_PACKAGE_v2ray-geoip=y" >> ./.config
+echo "CONFIG_PACKAGE_v2ray-geosite=y" >> ./.config
+# NSS的sqm
+echo "CONFIG_PACKAGE_luci-app-sqm=y" >> ./.config
+echo "CONFIG_PACKAGE_sqm-scripts-nss=y" >> ./.config
+# istore 编译报错
+# echo "CONFIG_PACKAGE_luci-app-istorex=y" >> ./.config
+# QuickStart
+# echo "CONFIG_PACKAGE_luci-app-quickstart=y" >> ./.config
+# filebrowser-go
+# echo "CONFIG_PACKAGE_luci-app-filebrowser-go=y" >> ./.config
+# 图形化web UI luci-app-uhttpd	
+# echo "CONFIG_PACKAGE_luci-app-uhttpd=y" >> ./.config
