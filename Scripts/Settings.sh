@@ -131,4 +131,4 @@ echo "CONFIG_PACKAGE_MAC80211_NSS_REDIRECT=y" >> ./.config
 # 图形化web UI luci-app-uhttpd	
 # echo "CONFIG_PACKAGE_luci-app-uhttpd=y" >> ./.config
 # 多播
-echo "CONFIG_PACKAGE_luci-app-mwan3=y" >> ./.config
+# echo "CONFIG_PACKAGE_luci-app-mwan3=y" >> ./.config
