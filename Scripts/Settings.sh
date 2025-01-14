@@ -101,7 +101,7 @@ echo "CONFIG_PACKAGE_luci-app-diskman=y" >> ./.config
 # 大鹅
 echo "CONFIG_PACKAGE_luci-app-daed=y" >> ./.config
 # 大鹅-next
-# echo "CONFIG_PACKAGE_luci-app-daed-next=y" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-daed-next=y" >> ./.config
 # 连上ssh不会断开并且显示文件管理
 echo "CONFIG_PACKAGE_openssh-sftp-server"=y
 # docker只能集成
