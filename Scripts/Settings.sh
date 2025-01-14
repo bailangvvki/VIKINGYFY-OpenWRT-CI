@@ -82,6 +82,8 @@ echo "CONFIG_PACKAGE_coremark=n" >> ./.config
 echo "CONFIG_PACKAGE_openssh-sftp-server=y" >> ./.config
 # 解析、查询、操作和格式化 JSON 数据
 echo "CONFIG_PACKAGE_jq=y" >> ./.config
+# base64 修改码云上的内容 需要用到
+echo "CONFIG_PACKAGE_coreutils-base64=y" >> ./.config
 # 简单明了的系统资源占用查看工具
 echo "CONFIG_PACKAGE_btop=y" >> ./.config
 # 多网盘存储
