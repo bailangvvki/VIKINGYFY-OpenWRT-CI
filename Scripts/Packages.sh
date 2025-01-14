@@ -96,7 +96,7 @@ git clone https://github.com/QiuSimons/luci-app-daed package/dae
 mkdir -p Package/libcron && wget -O Package/libcron/Makefile https://raw.githubusercontent.com/immortalwrt/packages/refs/heads/master/libs/libcron/Makefile
 
 # # luci-app-daed-next
-# git clone https://github.com/sbwml/luci-app-daed-next package/daed-next
+git clone https://github.com/sbwml/luci-app-daed-next package/daed-next
 
 #coremark修复
 sed -i 's/mkdir \$(PKG_BUILD_DIR)\/\$(ARCH)/mkdir -p \$(PKG_BUILD_DIR)\/\$(ARCH)/g' ../feeds/packages/utils/coremark/Makefile
