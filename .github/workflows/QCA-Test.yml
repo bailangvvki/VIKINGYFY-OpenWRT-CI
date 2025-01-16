@@ -1,8 +1,9 @@
 name: QCA-Test
 
 on:
-  schedule:
-    - cron: 0 22 * * *
+  # 每天早上4点编译
+  # schedule:
+  #   - cron: 0 22 * * *
   workflow_dispatch:
     inputs:
       PACKAGE:
