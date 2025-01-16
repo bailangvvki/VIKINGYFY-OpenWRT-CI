@@ -1,17 +1,8 @@
-#CI项目
-name: QCA-ALL
+name: QCA-Test
 
-#CI计划
 on:
-  # #自动编译：当Auto-Clean运行完成后
-  # workflow_run:
-  #   workflows: ["Auto-Clean"]
-  #   types:
-  #     - completed
-  #自动编译：每天早上6点
   schedule:
     - cron: 0 22 * * *
-  #手动编译
   workflow_dispatch:
     inputs:
       PACKAGE:
@@ -24,46 +15,153 @@ on:
         required: false
         type: boolean
 
-#CI权限
 permissions: write-all
 
-#CI任务
 jobs:
-  config:
-    name: ${{matrix.TARGET}}
+  build:
     strategy:
       fail-fast: false
-      #max-parallel: 3
       matrix:
-        # TARGET: [IPQ60XX-WIFI-YES, IPQ60XX-WIFI-NO, IPQ807X-WIFI-YES, IPQ807X-WIFI-NO]
-        TARGET: [IPQ60XX-WIFI-YES]
+        TARGET: [IPQ60XX-WIFI-YES, IPQ60XX-WIFI-NO, IPQ807X-WIFI-YES, IPQ807X-WIFI-NO]
         SOURCE: [VIKINGYFY/immortalwrt]
         BRANCH: [main]
-
-    #调用公用编译核心WRT-CORE.yml
-    uses: ./.github/workflows/WRT-CORE.yml
-    with:
-      #编译平台
-      WRT_TARGET: ${{matrix.TARGET}}
-      #默认主题
+    runs-on: ubuntu-22.04
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 编译平台
+      WRT_TARGET: ${{ matrix.TARGET }}
+      # 默认主题
       WRT_THEME: argon
-      #默认主机名
+      # 默认主机名
       WRT_NAME: OWRT
-      #默认WIFI名称
+      # 默认 WiFi 名称
       WRT_SSID: OWRT
-      #默认WIFI密码
+      # 默认 WiFi 密码
       WRT_WORD: 12345678
-      #默认地址
+      # 默认地址
       WRT_IP: 192.168.10.1
-      #默认密码，仅作提示，修改无用
+      # 默认密码，仅作提示
       WRT_PW: 无
-      #源码链接
-      WRT_REPO: https://github.com/${{matrix.SOURCE}}.git
-      #源码分支
-      WRT_BRANCH: ${{matrix.BRANCH}}
-      #源码名称
-      WRT_SOURCE: ${{matrix.SOURCE}}
-      #插件调整
-      WRT_PACKAGE: ${{inputs.PACKAGE}}
-      #仅输出配置文件
-      WRT_TEST: ${{inputs.TEST}}
+      # 源码链接
+      WRT_REPO: https://github.com/${{ matrix.SOURCE }}.git
+      # 源码分支
+      WRT_BRANCH: ${{ matrix.BRANCH }}
+      # 源码名称
+      WRT_SOURCE: ${{ matrix.SOURCE }}
+      # 插件调整
+      WRT_PACKAGE: ${{ inputs.PACKAGE }}
+      # 仅输出配置文件
+      WRT_TEST: ${{ inputs.TEST }}
+
+    steps:
+      - name: Checkout Projects(结算项目)
+        uses: actions/checkout@v3
+
+      - name: Free Disk Space(清理磁盘空间)
+        uses: endersonmenezes/free-disk-space@main
+        with:
+          remove_android: true
+          remove_dotnet: true
+          remove_haskell: true
+          remove_tool_cache: true
+          remove_swap: true
+          remove_packages: "android* azure* clang* dotnet* firefox* ghc* golang* google* libclang* libgl1* lld* llvm* \
+            microsoft* mongodb* mono* mysql* nodejs* openjdk* php* postgresql* powershell* snap* temurin* yarn* zulu*"
+          remove_folders: "/usr/lib/llvm* /usr/share/azure* /usr/local/lib/android* /usr/local/share/node_modules*"
+
+      - name: Initialization Environment(初始化环境)
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          docker rmi $(docker images -q) || true
+          sudo apt update -yqq
+          sudo apt install -yqq dos2unix libfuse-dev clang-15
+          sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          sudo timedatectl set-timezone "Asia/Shanghai"
+
+      - name: Initialization Values(初始化变量)
+        run: |
+          export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M.%S")
+          export WRT_CI=$(basename $GITHUB_WORKSPACE)
+          export WRT_VER=$(echo ${{ matrix.SOURCE }} | cut -d '/' -f 5-)-${{ matrix.BRANCH }}
+          export WRT_TYPE=$(sed -n "1{s/^#//;s/\r$//;p;q}" $GITHUB_WORKSPACE/Config/${{ matrix.TARGET }}.txt)
+
+          echo "WRT_DATE=$WRT_DATE" >> $GITHUB_ENV
+          echo "WRT_CI=$WRT_CI" >> $GITHUB_ENV
+          echo "WRT_VER=$WRT_VER" >> $GITHUB_ENV
+          echo "WRT_TYPE=$WRT_TYPE" >> $GITHUB_ENV
+
+      - name: Clone Code(拉取源码)
+        run: |
+          git clone --depth=1 --single-branch --branch ${{ matrix.BRANCH }} https://github.com/${{ matrix.SOURCE }}.git ./wrt/
+          cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
+
+      - name: Check Scripts(检查代码)
+        run: |
+          find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+
+      - name: Update Feeds(更新依赖源)
+        run: |
+          cd ./wrt/
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Custom Packages(自定义替换软件包)
+        run: |
+          cd ./wrt/package/
+          $GITHUB_WORKSPACE/Scripts/Packages.sh
+          $GITHUB_WORKSPACE/Scripts/Handles.sh
+
+      - name: Custom Settings(自定义设置)
+        run: |
+          cd ./wrt/
+          cat $GITHUB_WORKSPACE/Config/${{ matrix.TARGET }}.txt $GITHUB_WORKSPACE/Config/GENERAL.txt >> .config
+          $GITHUB_WORKSPACE/Scripts/Settings.sh
+          make defconfig -j$(nproc)
+
+      - name: Check Caches(检查缓存)
+        if: ${{ inputs.TEST != 'true' }}
+        uses: actions/cache@v3
+        with:
+          key: ${{ matrix.TARGET }}-${{ env.WRT_VER }}-${{ env.WRT_HASH }}
+          restore-keys: |
+            ${{ matrix.TARGET }}-${{ env.WRT_VER }}
+          path: |
+            ./wrt/.ccache
+            ./wrt/staging_dir/host*
+            ./wrt/staging_dir/tool*
+
+      - name: Download Packages(下载依赖)
+        if: ${{ inputs.TEST != 'true' }}
+        run: |
+          cd ./wrt/
+          make download -j$(nproc)
+
+      - name: Compile Firmware(编译固件)
+        if: ${{ inputs.TEST != 'true' }}
+        run: |
+          cd ./wrt/
+          make -j$(nproc) || make -j1 V=s
+
+      - name: Machine Information(设备信息)
+        run: |
+          lscpu | grep -E "name|Core|Thread"
+          df -h
+          du -h --max-depth=1
+
+      - name: Package Firmware(打包固件)
+        run: |
+          cd ./wrt/ && mkdir -p ./upload/
+          cp -f .config ./upload/Config_"${{ matrix.TARGET }}"_"${{ env.WRT_VER }}"_"${{ env.WRT_DATE }}".txt
+
+      - name: Release Firmware(发布固件)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ matrix.TARGET }}_${{ env.WRT_VER }}_${{ env.WRT_DATE }}
+          files: ./wrt/upload/*
+          body: |
+            平台：${{ matrix.TARGET }}
+            源码：${{ matrix.SOURCE }}
+            分支：${{ matrix.BRANCH }}
+            时间：${{ env.WRT_DATE }}
+            固件内核：${{ env.WRT_KVER }}
