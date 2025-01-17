@@ -121,6 +121,8 @@ jobs:
         run: |
 
           df -hT $GITHUB_WORKSPACE
+
+          cd $GITHUB_WORKSPACE
         
           git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
 
