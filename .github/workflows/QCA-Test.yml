@@ -41,7 +41,7 @@ jobs:
         BRANCH: [main]
 
     #调用公用编译核心WRT-CORE.yml
-    uses: ./.github/workflows/WRT-Test.yml
+    uses: ./.github/workflows/WRT-Tests.yml
     with:
       #编译平台
       WRT_TARGET: ${{matrix.TARGET}}
