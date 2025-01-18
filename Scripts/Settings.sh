@@ -76,8 +76,10 @@ echo "CONFIG_PACKAGE_luci-app-wolplus=n" >> ./.config
 echo "CONFIG_PACKAGE_luci-app-tailscale=n" >> ./.config
 echo "CONFIG_PACKAGE_luci-app-advancedplus=n" >> ./.config
 echo "CONFIG_PACKAGE_luci-theme-kucat=n" >> ./.config
-# 一定要禁止编译这个coremark 不然会导致编译失败
-# echo "CONFIG_PACKAGE_coremark=n" >> ./.config
+# 使用opkg替换apk安装器
+echo "CONFIG_PACKAGE_opkg=y" >> ./.config
+echo "CONFIG_OPKG_USE_CURL=y" >> ./.config
+echo "CONFIG_USE_APK is not set" >> ./.config
 # 可以让FinalShell查看文件列表并且ssh连上不会自动断开
 echo "CONFIG_PACKAGE_openssh-sftp-server=y" >> ./.config
 # 解析、查询、操作和格式化 JSON 数据
