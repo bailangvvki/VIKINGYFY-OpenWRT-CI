@@ -107,14 +107,14 @@ echo "CONFIG_PACKAGE_openssh-sftp-server"=y
 # docker只能集成
 echo "CONFIG_PACKAGE_luci-app-dockerman=y" >> ./.config
 # qBittorrent
-# echo "CONFIG_PACKAGE_luci-app-qbittorrent=y" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-qbittorrent=y" >> ./.config
 # 添加Homebox内网测速
 # echo "CONFIG_PACKAGE_luci-app-homebox=y" >> ./.config
 # V2rayA
-# echo "CONFIG_PACKAGE_luci-app-v2raya=y" >> ./.config
-# echo "CONFIG_PACKAGE_v2ray-core=y" >> ./.config
-# echo "CONFIG_PACKAGE_v2ray-geoip=y" >> ./.config
-# echo "CONFIG_PACKAGE_v2ray-geosite=y" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-v2raya=y" >> ./.config
+echo "CONFIG_PACKAGE_v2ray-core=y" >> ./.config
+echo "CONFIG_PACKAGE_v2ray-geoip=y" >> ./.config
+echo "CONFIG_PACKAGE_v2ray-geosite=y" >> ./.config
 # NSS的sqm
 echo "CONFIG_PACKAGE_luci-app-sqm=y" >> ./.config
 echo "CONFIG_PACKAGE_sqm-scripts-nss=y" >> ./.config
@@ -127,8 +127,8 @@ echo "CONFIG_PACKAGE_MAC80211_NSS_REDIRECT=y" >> ./.config
 # QuickStart
 # echo "CONFIG_PACKAGE_luci-app-quickstart=y" >> ./.config
 # filebrowser-go
-# echo "CONFIG_PACKAGE_luci-app-filebrowser-go=y" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-filebrowser-go=y" >> ./.config
 # 图形化web UI luci-app-uhttpd	
-# echo "CONFIG_PACKAGE_luci-app-uhttpd=y" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-uhttpd=y" >> ./.config
 # 多播
 # echo "CONFIG_PACKAGE_luci-app-mwan3=y" >> ./.config
