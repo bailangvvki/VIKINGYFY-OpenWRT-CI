@@ -100,3 +100,6 @@ git clone https://github.com/sbwml/luci-app-daed-next package/daed-next
 
 #coremark修复
 sed -i 's/mkdir \$(PKG_BUILD_DIR)\/\$(ARCH)/mkdir -p \$(PKG_BUILD_DIR)\/\$(ARCH)/g' ../feeds/packages/utils/coremark/Makefile
+
+# 添加源
+echo "src-git small8 https://github.com/kenzok8/small-package" >>"feeds.conf.default"
