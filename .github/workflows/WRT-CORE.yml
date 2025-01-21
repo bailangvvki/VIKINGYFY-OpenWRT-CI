@@ -217,7 +217,8 @@ jobs:
           # cd ./wrt/
           cd $OPENWRT_PATH
 
-          make -j$(nproc) || make -j1 V=s
+          # make -j$(nproc) || make -j1 V=s
+          make -j1
 
       - name: Machine Information(设备信息)
         run: |
