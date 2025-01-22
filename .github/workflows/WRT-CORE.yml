@@ -219,7 +219,7 @@ jobs:
           cd $OPENWRT_PATH
 
           # make -j$(nproc) || make -j1 V=s
-          make -j$(($(nproc) * 6)) || make -j1 V=s
+          make -j$(($(nproc) * 3)) || make -j1 V=s
 
       - name: Machine Information(设备信息)
         run: |
