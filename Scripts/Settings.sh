@@ -94,6 +94,7 @@ echo "CONFIG_PACKAGE_luci-app-wolplus=n" >> ./.config
 echo "CONFIG_PACKAGE_luci-app-tailscale=n" >> ./.config
 echo "CONFIG_PACKAGE_luci-app-advancedplus=n" >> ./.config
 echo "CONFIG_PACKAGE_luci-theme-kucat=n" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-mihomo=n" >> ./.config
 # 使用opkg替换apk安装器
 echo "CONFIG_PACKAGE_opkg=y" >> ./.config
 echo "CONFIG_OPKG_USE_CURL=y" >> ./.config
