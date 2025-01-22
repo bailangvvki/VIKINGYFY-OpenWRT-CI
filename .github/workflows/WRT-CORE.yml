@@ -209,7 +209,8 @@ jobs:
           # cd ./wrt/
           cd $OPENWRT_PATH
 
-          make download -j$(nproc)
+          # make download -j$(nproc)
+          make download -j$(($(nproc) * 4))
 
       - name: Compile Firmware(编译固件)
         if: env.WRT_TEST != 'true'
@@ -218,7 +219,7 @@ jobs:
           cd $OPENWRT_PATH
 
           # make -j$(nproc) || make -j1 V=s
-          make -j1
+          make -j$(($(nproc) * 3)) || make -j1 V=s
 
       - name: Machine Information(设备信息)
         run: |
