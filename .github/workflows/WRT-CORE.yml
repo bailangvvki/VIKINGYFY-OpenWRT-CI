@@ -207,7 +207,7 @@ jobs:
           # cd ./wrt/
           cd $OPENWRT_PATH/
 
-          make download -j$(($(nproc) * 6))
+          make download -j$(nproc)
 
       - name: Compile Firmware(编译固件)
         if: env.WRT_TEST != 'true'
